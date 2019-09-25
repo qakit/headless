@@ -114,7 +114,16 @@ namespace headless
 			pSec.nLength = Marshal.SizeOf(pSec);
 			tSec.nLength = Marshal.SizeOf(tSec);
 
-			var retValue = WinApi.CreateProcess(appPath, cmdLine,
+			string commandLine = "";
+			if(!string.IsNullOrEmpty(appPath) && !string.IsNullOrEmpty(cmdLine))
+			{
+				commandLine = $"{appPath} {cmdLine}";
+			}
+			else if(! string.IsNullOrEmpty(cmdLine)){
+				commandLine = cmdLine;
+			}
+
+			var retValue = WinApi.CreateProcess(appPath, commandLine,
 				ref pSec,ref tSec,false,
 				NORMAL_PRIORITY_CLASS | CREATE_SUSPENDED,
 				IntPtr.Zero,null, ref sInfo,out var pInfo);
