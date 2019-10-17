@@ -40,7 +40,7 @@ namespace headless
 		{
 			WinApi.CloseDesktop(handle);
 		}
-        
+		
 		public static bool DesktopExists(string desktopName)
 		{
 			var handle = WinApi.OpenDesktop(desktopName, 0, false, 0);
@@ -139,6 +139,25 @@ namespace headless
 				return new ProcessInTheJob(ProcessInTheJob.Status.COULD_NOT_ASSIGN_JOB, IntPtr.Zero, pInfo);
 			}
 
+			// Ensure that killing one process kills the others                
+			var extendedInfo = new WinApi.JOBOBJECT_EXTENDED_LIMIT_INFORMATION
+			{
+				BasicLimitInformation = {
+					LimitFlags = (short)WinApi.LimitFlags.JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+				}
+			};
+
+			int length = Marshal.SizeOf(typeof(WinApi.JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+			IntPtr extendedInfoPtr = Marshal.AllocHGlobal(length);
+			Marshal.StructureToPtr(extendedInfo, extendedInfoPtr, false);
+
+			if (!WinApi.SetInformationJobObject(jobHandle,
+				WinApi.JOBOBJECTINFOCLASS.JobObjectExtendedLimitInformation,
+				extendedInfoPtr, (uint)length))
+				throw new Exception(string.Format("Unable to set information.  Error: {0}", Marshal.GetLastWin32Error()));
+
+			Marshal.FreeHGlobal(extendedInfoPtr);
+ 
 			WinApi.ResumeThread(pInfo.hThread);
 			return new ProcessInTheJob(ProcessInTheJob.Status.JOB_ASSIGNED, jobHandle, pInfo);
 		}

@@ -109,6 +109,7 @@ namespace headless
 				cleanupActions.Add(() =>
 				{
 					WriteLine($"INFO: closing job {jobProcess.jobHandle}");
+					Console.Beep();
 					WinApi.CloseHandle(jobProcess.jobHandle);
 				});
 			}
@@ -126,6 +127,8 @@ namespace headless
 					DesktopUtils.CloseDesktopWindows(desktopName);
 				});
 			}
+
+			WriteLine($"INFO: app process id '{System.Diagnostics.Process.GetCurrentProcess().Id}'");
 
 			WinApi.CloseHandle(jobProcess.processInfo.hThread);
 			WinApi.WaitForSingleObject(jobProcess.processInfo.hProcess, WinApi.INFINITE);
