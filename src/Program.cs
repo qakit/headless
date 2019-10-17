@@ -8,7 +8,7 @@ namespace headless
 {
 	static class Program
 	{
-		static string FindDriver(string driver)
+		static string FindApplication(string driver)
 		{
 			var sb = new StringBuilder(260);
 			var result = WinApi.SearchPath(null , driver, null , sb.Capacity, sb, out var _);
@@ -40,21 +40,31 @@ namespace headless
 
 		static int Main(string[] cmdArgs)
 		{
-			var argMap = Args.Parse(cmdArgs, new HashSet<string> { "driver", "desktop" });
-			var cleanupActions = new List<Action>();
-			
-			WriteLine($"Headless driver started with args '{string.Join(" ", cmdArgs)}'");
+			var argMap = Args.Parse(cmdArgs, new HashSet<string> { "app", "desktop" });
 
-			var seleniumDriver =
-				(argMap.Named.TryGetValue("driver", out var val) ? val
-					: System.Environment.GetEnvironmentVariable("HEADLESS_DRIVER")) ?? "chromedriver.exe";
-			var driverPath = FindDriver(seleniumDriver);
-			if (driverPath == null)
-			{
-				WriteLine($"ERR: driver '{seleniumDriver}' not found'");
+			if(cmdArgs.Length == 0) {
+				WriteLine("Usage: headless <appname> [--<option-name> <option-value...] -- <app args>");
+				WriteLine("Available options are:");
+				WriteLine("  --app <appname> - application to start. Alternative way to set an app.");
+				WriteLine("  --desktop - desktop name. Leave unspecified for random name.");
+				WriteLine("  --desktop=false - do not use virtual desktop");
 				return 1;
 			}
-			WriteLine($"INFO: using driver {driverPath}");
+			
+			WriteLine($"Starting headless '{string.Join(" ", cmdArgs)}'");
+
+			var appName =
+				(argMap.Named.TryGetValue("app", out var val) ? val
+					: System.Environment.GetEnvironmentVariable("HEADLESS_APP")) ??
+					(argMap.Positional.Count > 0 ? argMap.Positional[0] : null);
+		
+			var appPath = FindApplication(appName);
+			if (appPath == null)
+			{
+				WriteLine($"ERR: application '{appName}' not found'");
+				return 1;
+			}
+			WriteLine($"INFO: starting application {appPath}");
 
 			var rand = new System.Random();
 
@@ -71,6 +81,8 @@ namespace headless
 				desktopName = $"Headless-{rand.Next(int.MaxValue)}";
 				useHiddenDesktop = true;
 			}
+
+			var cleanupActions = new List<Action>();
 
 			CancelKeyPress += (s, ev) =>
 			{
@@ -95,10 +107,10 @@ namespace headless
 
 			var argsEscaped = from r in argMap.Reminder select $"\"{r}\"";
 			var commandLine = String.Join(" ", argsEscaped);
-			WriteLine($"INFO: Starting driver with cmdline '{commandLine}'");
+			WriteLine($"INFO: Starting app with cmdline '{commandLine}'");
 
 			// TODO desktop default
-			var jobProcess = DesktopUtils.CreateProcessInTheJob(desktopName, driverPath, commandLine, IntPtr.Zero);
+			var jobProcess = DesktopUtils.CreateProcessInTheJob(desktopName, appPath, commandLine, IntPtr.Zero);
 			if (jobProcess.status == DesktopUtils.ProcessInTheJob.Status.COULD_NOT_ASSIGN_JOB)
 			{
 				WriteLine("ERROR: Failed to assign job");
