@@ -22,9 +22,13 @@ Available options:
 Simply use `--` in command line to tell `headless` that subsequent parameters should be applied to driver executable.
 
 ```bash
-headless.exe --driver=c:\chromedriver.exe
-headless.exe --driver c:\chromedriver.exe -- -port=12345
-headless.exe --driver c:\chromedriver.exe --desktop headless-mine
+headless.exe c:\chromedriver.exe
+headless.exe --app=c:\chromedriver.exe
+headless.exe --app c:\chromedriver.exe
+headless.exe --app c:\chromedriver.exe --desktop headless-mine
+set HEADLESS_APP=c:\chromedriver.exe && headless.exe
 
-headless.exe --driver c:\chromedriver.exe --desktop=false
+headless.exe c:\chromedriver.exe --desktop=false
+` example of passing parameters to callee application`
+headless.exe c:\chromedriver.exe -- --port=9126
 ```
