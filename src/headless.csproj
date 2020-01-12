@@ -2,7 +2,22 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net461</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(Mode)' != ''">
+    <PackageReference Include="Microsoft.DotNet.ILCompiler" Version="1.0.0-alpha-*" />
+    <IlcArg Include="--removefeature:EventSource" />
+    <IlcArg Include="--removefeature:FrameworkStrings" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(Mode)' == 'CoreRT-High'">
+    <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
+    <IlcOptimizationPreference>Size</IlcOptimizationPreference>
+    <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
+    <IlcInvariantGlobalization>true</IlcInvariantGlobalization>
+    <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+    <IlcDisableReflection>true</IlcDisableReflection>
   </PropertyGroup>
 
 </Project>
